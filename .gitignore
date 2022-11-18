@@ -4,6 +4,7 @@ bin/
 target/
 build/
 out/
+null/
 
 *.log
 *.iml
