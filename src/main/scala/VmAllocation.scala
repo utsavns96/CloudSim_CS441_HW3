@@ -32,10 +32,11 @@ object VmAllocation {
     val hostconfig = config.getConfig("HostConfig")
     val vmconfig = config.getConfig("VMConfig")
     val cloudletconfig = config.getConfig("CloudletConfig")
+    val dataconfig = config.getConfig("DatacenterConfig")
     //starting a new simulation
     val simulation = new CloudSim
     //creating a new datacenter
-    val datacenter0 = CreateObjects.createDatacenter( new VmSchedulerTimeShared, hostconfig.getInt("HOSTS"), hostconfig.getInt("HOST_PES"), hostconfig.getInt("HOST_MIPS"), hostconfig.getInt("HOST_RAM"), hostconfig.getInt("HOST_BW"), hostconfig.getInt("HOST_STORAGE"), simulation)
+    val datacenter0 = CreateObjects.createDatacenter( new VmSchedulerTimeShared, hostconfig.getInt("HOSTS"), hostconfig.getInt("HOST_PES"), hostconfig.getInt("HOST_MIPS"), hostconfig.getInt("HOST_RAM"), hostconfig.getInt("HOST_BW"), hostconfig.getInt("HOST_STORAGE"), simulation,dataconfig)
     logger.info("Datacenter0 created")
     //creating a new broker to manage our VMs and Cloudlets
     val broker0 = new DatacenterBrokerSimple(simulation)
@@ -73,7 +74,7 @@ object VmAllocation {
     //creating our second simulation
     val simulation1 = new CloudSim
     //creating the second datacenter
-    val datacenter1 = CreateObjects.createDatacenter( new VmSchedulerTimeShared,hostconfig.getInt("HOSTS"), hostconfig.getInt("HOST_PES"), hostconfig.getInt("HOST_MIPS"), hostconfig.getInt("HOST_RAM"), hostconfig.getInt("HOST_BW"), hostconfig.getInt("HOST_STORAGE"), simulation1)
+    val datacenter1 = CreateObjects.createDatacenter( new VmSchedulerTimeShared,hostconfig.getInt("HOSTS"), hostconfig.getInt("HOST_PES"), hostconfig.getInt("HOST_MIPS"), hostconfig.getInt("HOST_RAM"), hostconfig.getInt("HOST_BW"), hostconfig.getInt("HOST_STORAGE"), simulation1,dataconfig)
     logger.info("Second datacenter created")
     //creating a second broker to manage our VMs and Cloudlets for the second simulation
     val broker1 = new DatacenterBrokerSimple(simulation1)

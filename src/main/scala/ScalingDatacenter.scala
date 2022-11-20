@@ -1,3 +1,5 @@
+import CreateDatacenter.CreateObjects
+import HelperUtils.CreateLogger
 import com.typesafe.config.{Config, ConfigFactory}
 import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicyRoundRobin
 import org.cloudbus.cloudsim.brokers.{DatacenterBroker, DatacenterBrokerSimple}
@@ -30,22 +32,36 @@ object ScalingDatacenter {
    private var createdVms: Int = 0
    private var createdCloudlets: Int =0
     private var broker: DatacenterBroker = _
+  val logger = CreateLogger(classOf[ScalingDatacenter.type])
   def runScaling: Unit ={
+    logger.info("*****-----------------------------------------Starting ScalingDatacenter Simulation-----------------------------------------*****")
     val config: Config = ConfigFactory.load("ScalingConfig.conf")
     val hostconfig = config.getConfig("HostConfig")
     val vmconfig = config.getConfig("VMConfig")
     val cloudletconfig = config.getConfig("CloudletConfig")
+    val dataconfig: Config = config.getConfig("DatacenterConfig")
+    logger.info("Configs loaded")
     val scalingsimulation = new CloudSim
-    val datacenter = createDatacenter(hostconfig.getInt("HOSTS"), hostconfig.getInt("HOST_PES"), hostconfig.getInt("HOST_MIPS"), hostconfig.getInt("HOST_RAM"), hostconfig.getInt("HOST_BW"), hostconfig.getInt("HOST_STORAGE"), scalingsimulation)
+    val datacenter = CreateObjects.createDatacenter(new VmSchedulerTimeShared,hostconfig.getInt("HOSTS"), hostconfig.getInt("HOST_PES"), hostconfig.getInt("HOST_MIPS"), hostconfig.getInt("HOST_RAM"), hostconfig.getInt("HOST_BW"), hostconfig.getInt("HOST_STORAGE"), scalingsimulation, dataconfig)
     datacenter.setSchedulingInterval(1)
+    datacenter.getCharacteristics.setCostPerBw(dataconfig.getDouble("COSTPERBW")).setCostPerMem(dataconfig.getDouble("COSTPERMEM")).setCostPerSecond(dataconfig.getDouble("COSTPERSEC")).setCostPerStorage(dataconfig.getDouble("COSTBYSTORAGE"))
+    logger.debug("Datacenter created")
     broker = new DatacenterBrokerSimple(scalingsimulation)
+    logger.debug("Broker created")
     scalingsimulation.addOnClockTickListener(createNewCloudlets)
+    logger.debug("Added listener to simulation")
     vmList.addAll(createScalableVms(hostconfig.getInt("HOST_MIPS"), vmconfig.getInt("VMS"), vmconfig.getInt("VM_PES"), vmconfig.getInt("VM_RAM"), vmconfig.getInt("VM_BW"), vmconfig.getInt("VM_SIZE")))
+    logger.debug("VMs created")
     createCloudletList(cloudletconfig.getInt("CLOUDLETS"), cloudletconfig.getInt("CLOUDLET_LENGTH"), cloudletconfig.getInt("CLOUDLET_PES"), cloudletconfig.getInt("CLOUDLET_SIZE"))
     //createNewCloudlets(cloudletconfig.getInt("CLOUDLETS"), cloudletconfig.getInt("CLOUDLET_LENGTH"), cloudletconfig.getInt("CLOUDLET_PES"), cloudletconfig.getInt("CLOUDLET_SIZE"))
+    logger.debug("Cloudlets Created")
     broker.submitVmList(vmList)
+    logger.debug("VMList submitted")
     broker.submitCloudletList(cloudletList)
+    logger.debug("Cloudletlist submitted")
+    logger.debug("--------------------Starting Simulation--------------------")
     scalingsimulation.start
+    logger.debug("--------------------Simulation Finished--------------------")
     val finishedCloudlets = broker.getCloudletFinishedList
     new CloudletsTableBuilder(finishedCloudlets).addColumn(new TextTableColumn("RAM Utilization", "Percentage"), (cloudlet: Cloudlet) => BigDecimal(cloudlet.getUtilizationOfRam() * 100.0).setScale(2, BigDecimal.RoundingMode.HALF_UP))
       .addColumn(new TextTableColumn("CPU Utilization", "Percentage"), (cloudlet: Cloudlet) => BigDecimal(cloudlet.getUtilizationOfCpu() * 100.0).setScale(2, BigDecimal.RoundingMode.HALF_UP))
@@ -74,7 +90,7 @@ object ScalingDatacenter {
     val hostconfig = config.getConfig("HostConfig")
     val vmconfig = config.getConfig("VMConfig")
     createdVms = createdVms+1
-     println("Creating new VM: "+createdVms)
+     logger.debug("Creating new VM: "+createdVms)
     return new VmSimple(createdVms, hostconfig.getInt("HOST_MIPS"), vmconfig.getInt("VM_PES")).setRam(vmconfig.getInt("VM_RAM")).setBw(vmconfig.getInt("VM_BW")).setSize(vmconfig.getInt("VM_SIZE"))
    }
   //Setup for Horizontal Scaling
@@ -86,7 +102,7 @@ object ScalingDatacenter {
   //Predicate to find is the VM is overloaded
    private def isVmOverloaded(vm: Vm): Boolean ={
      if (vm.getCpuPercentUtilization > 0.7 || vm.getHostRamUtilization > 0.5){
-       println("VM: " + vm.getId + " is overloaded " + "CPU: " + vm.getCpuPercentUtilization + " RAM: " + vm.getHostRamUtilization)
+       logger.warn("VM: " + vm.getId + " is overloaded " + "CPU: " + vm.getCpuPercentUtilization + " RAM: " + vm.getHostRamUtilization)
        return true
      }
      else
@@ -132,7 +148,7 @@ object ScalingDatacenter {
      val time: Long = info.getTime.toLong
     if(time % cloudletcreation_interval == 0 && time <=50){
      val cloudletsNumber = cloudletconfig.getInt("CLOUDLETS_NEW")
-     println("Creating " + cloudletconfig.getInt("CLOUDLETS") + " Cloudlets at time " + time)
+     logger.debug("Creating " + cloudletconfig.getInt("CLOUDLETS") + " Cloudlets at time " + time)
      val newCloudletList = new util.ArrayList[Cloudlet](cloudletconfig.getInt("CLOUDLETS"))
      (1 to cloudletsNumber).map{_=>
        val cloudlet = new CloudletSimple(cloudletconfig.getInt("CLOUDLET_LENGTH"), cloudletconfig.getInt("CLOUDLET_PES"))
@@ -145,7 +161,7 @@ object ScalingDatacenter {
     }
    }
 
-  private def createDatacenter(host: Int, pes: Int, mpis: Int, ram: Int, bw: Int, storage: Int, sim: CloudSim): DatacenterSimple = {
+  /*private def createDatacenter(host: Int, pes: Int, mpis: Int, ram: Int, bw: Int, storage: Int, sim: CloudSim): DatacenterSimple = {
     val config: Config = ConfigFactory.load("ScalingConfig.conf")
     val dataconfig: Config = config.getConfig("DatacenterConfig")
     val hostList = new util.ArrayList[Host](host)
@@ -158,9 +174,9 @@ object ScalingDatacenter {
     //createTreeNetwork(sim, datacenter)
     datacenter.getCharacteristics.setCostPerBw(dataconfig.getDouble("COSTPERBW")).setCostPerMem(dataconfig.getDouble("COSTPERMEM")).setCostPerSecond(dataconfig.getDouble("COSTPERSEC")).setCostPerStorage(dataconfig.getDouble("COSTBYSTORAGE"))
     datacenter
-  }
+  }*/
 
-  private def createHost(vmscheduler: VmScheduler, pes: Int, mips: Int, ram: Int, bw: Int, storage: Int) = {
+ /* private def createHost(vmscheduler: VmScheduler, pes: Int, mips: Int, ram: Int, bw: Int, storage: Int) = {
     val peList = new util.ArrayList[Pe](pes)
     //List of Host's CPUs (Processing Elements, PEs)
     //Uses a PeProvisionerSimple by default to provision PEs for VMs
@@ -168,5 +184,5 @@ object ScalingDatacenter {
       peList.add(new PeSimple(mips))
     }
     new HostSimple(ram, bw, storage, peList).setVmScheduler(vmscheduler.getClass().getDeclaredConstructor().newInstance())
-  }
+  }*/
 }
