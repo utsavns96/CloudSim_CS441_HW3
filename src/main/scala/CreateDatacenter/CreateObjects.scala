@@ -31,10 +31,10 @@ object CreateObjects {
   /**
    *  Creates a new datacenter based on our configs
    */
-  def createDatacenter(vmscheduler: VmScheduler, host: Int, pes: Int, mpis: Int, ram: Int, bw: Int, storage: Int, sim: CloudSim) = {
+  def createDatacenter(vmscheduler: VmScheduler, host: Int, pes: Int, mpis: Int, ram: Int, bw: Int, storage: Int, sim: CloudSim, config: Config) = {
     val hostList = new util.ArrayList[Host](host)
     (1 to host).map { i =>
-      val host = createHost(vmscheduler, pes, mpis, ram, bw, storage)
+      val host = createHost(vmscheduler, pes, mpis, ram, bw, storage, config)
       hostList.add(host)
       logger.debug("Host "+i+" created")
     }
@@ -44,16 +44,36 @@ object CreateObjects {
   /**
    * Creates a new hosts based on our configs
    */
-  def createHost(vmscheduler: VmScheduler, pes: Int, mips: Int, ram: Int, bw: Int, storage: Int) = {
+  def createHost(vmscheduler: VmScheduler, pes: Int, mips: Int, ram: Int, bw: Int, storage: Int, config: Config) = {
     val peList = new util.ArrayList[Pe](pes)
     //List of Host's CPUs (Processing Elements, PEs)
     //Uses a PeProvisionerSimple by default to provision PEs for VMs
     (1 to pes).map { _ =>
       peList.add(new PeSimple(mips))
     }
-    new HostSimple(ram, bw, storage, peList).setVmScheduler(vmscheduler.getClass().getDeclaredConstructor().newInstance())
+    val host = HostSimple(ram, bw, storage, peList).setVmScheduler(vmscheduler.getClass().getDeclaredConstructor().newInstance())
+    val powerModel: PowerModelHost = new PowerModelHostSimple(50, 15)
+    powerModel.setStartupDelay(config.getInt("STARTUPDELAY"))
+    powerModel.setShutDownDelay(config.getInt("SHUTDOWNDELAY"))
+    powerModel.setStartupPower(config.getInt("STARTUPPOWER"))
+    powerModel.setShutDownPower(config.getInt("SHUTDOWNPOWER"))
+    host.setIdleShutdownDeadline(config.getInt("IDLESHUTDOWNDEALINE"))
+    host.setPowerModel(powerModel)
+    host
   }
 
+  def setPowerModel(Hostlist: java.util.List[Host], config: Config): Unit ={
+    Hostlist.asScala.foreach(host=>{
+      val powerModel: PowerModelHost = new PowerModelHostSimple(config.getInt("MAXPOWER"), config.getInt("STATICPOWER"))
+      powerModel.setStartupDelay(config.getInt("STARTUPDELAY"))
+      powerModel.setShutDownDelay(config.getInt("SHUTDOWNDELAY"))
+      powerModel.setStartupPower(config.getInt("STARTUPPOWER"))
+      powerModel.setShutDownPower(config.getInt("SHUTDOWNPOWER"))
+      host.setIdleShutdownDeadline(config.getInt("IDLESHUTDOWNDEALINE"))
+      host.setPowerModel(powerModel)
+    })
+  }
+  
   /**
    * Creates a new VMs based on our configs
    */
@@ -81,11 +101,22 @@ object CreateObjects {
     cloudletList
   }
 
+  def createFixedCloudlets(utilizationModel: UtilizationModel, cloudlets: Int, cloudlet_length: Int, cloudlet_pes: Int, cloudlet_size: Int) = {
+    val cloudletList = new util.ArrayList[Cloudlet](cloudlets)
+    new Random()
+    (1 to cloudlets).map { _ =>
+      val cloudlet = new CloudletSimple(cloudlet_length, cloudlet_pes, utilizationModel)
+      cloudlet.setSizes(cloudlet_size)//.setSubmissionDelay((Random.nextInt().abs % 10) * 1000)
+      cloudletList.add(cloudlet)
+    }
+    cloudletList
+  }
+  
    def connectDatacenter(datacenterlist: List[Datacenter], broker: DatacenterBroker): Unit = {
     val networkTopology = new BriteNetworkTopology()
     networkTopology.addLink(datacenterlist(0), broker, 1000, 2)
     networkTopology.addLink(datacenterlist(1), broker, 1000, 2)
-    networkTopology.addLink(datacenterlist(0), datacenterlist(1), 1000, 3)
+    networkTopology.addLink(datacenterlist(0), datacenterlist(1), 1000, 4)
   }
 
    def createNetworkDatacenter(host: Int, pes: Int, mpis: Int, ram: Int, bw: Int, storage: Int, sim: CloudSim): NetworkDatacenter = {
@@ -105,13 +136,13 @@ object CreateObjects {
       peList.add(new PeSimple(mips))
     }
     val host = new NetworkHost(ram, bw, storage, peList)
-    val powerModel: PowerModelHost = new PowerModelHostSimple(50, 15)
+    /*val powerModel: PowerModelHost = new PowerModelHostSimple(50, 15)
     powerModel.setStartupDelay(0)
     powerModel.setShutDownDelay(10)
     powerModel.setStartupPower(40)
     powerModel.setShutDownPower(15)
     host.setPowerModel(powerModel)
-    host.setIdleShutdownDeadline(2.0)
+    host.setIdleShutdownDeadline(2.0)*/
     host
   }
 
