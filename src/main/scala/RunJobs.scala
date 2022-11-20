@@ -12,9 +12,10 @@ object RunJobs {
       case 2 => VmUtilAndSchedule.runVmScheduler
       case 3 => CloudProvider.runCloud
       case 4 => ScalingDatacenter.runScaling
-      case 5 => println("Not implemented yet")
+      case 5 => IaasPaasSaas.runSim
       case _ => println("Invalid Input")
     }
+ //IaasPaasSaas.runSim
   }
 
 }
