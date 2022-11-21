@@ -43,25 +43,25 @@ object CloudProvider {
   val data1config: Config = config.getConfig("Datacenter1Config")
   val cloudprovidersim = new CloudSim
   //creating a new datacenter
-  val datacenter0 = CreateObjects.createNetworkDatacenter(hostconfig.getInt("HOSTS"), hostconfig.getInt("HOST_PES"), hostconfig.getInt("HOST_MIPS"), hostconfig.getInt("HOST_RAM"), hostconfig.getInt("HOST_BW"), hostconfig.getInt("HOST_STORAGE"), cloudprovidersim)
+  val datacenter0 = CreateObjects.createNetworkDatacenter(hostconfig.getInt("HOSTS"), hostconfig.getInt("HOST_PES"), hostconfig.getInt("HOST_MIPS"), hostconfig.getInt("HOST_RAM"), hostconfig.getInt("HOST_BW"), hostconfig.getInt("HOST_STORAGE"), cloudprovidersim,dataconfig)
   //set datacenter0 costs
   datacenter0.getCharacteristics.setCostPerBw(dataconfig.getDouble("COSTPERBW")).setCostPerMem(dataconfig.getDouble("COSTPERMEM")).setCostPerSecond(dataconfig.getDouble("COSTPERSEC")).setCostPerStorage(dataconfig.getDouble("COSTBYSTORAGE"))
   logger.info("Created datacenter0")
   //set datacenter0 to use FirstFit policy for VM allocation
   datacenter0.setVmAllocationPolicy(new VmAllocationPolicyFirstFit)
   //set power model for hosts
-  CreateObjects.setPowerModel(datacenter0.getHostList,dataconfig)
+  //CreateObjects.setPowerModel(datacenter0.getHostList,dataconfig)
   //create a tree network for datacenter0
   CreateObjects.createTreeNetwork(cloudprovidersim, datacenter0)
   logger.info("Tree Network created for datacenter0")
   //create second datacenter
-  val datacenter1 = CreateObjects.createNetworkDatacenter(hostconfig.getInt("HOSTS"), hostconfig.getInt("HOST_PES"), hostconfig.getInt("HOST_MIPS"), hostconfig.getInt("HOST_RAM"), hostconfig.getInt("HOST_BW"), hostconfig.getInt("HOST_STORAGE"), cloudprovidersim)
+  val datacenter1 = CreateObjects.createNetworkDatacenter(hostconfig.getInt("HOSTS"), hostconfig.getInt("HOST_PES"), hostconfig.getInt("HOST_MIPS"), hostconfig.getInt("HOST_RAM"), hostconfig.getInt("HOST_BW"), hostconfig.getInt("HOST_STORAGE"), cloudprovidersim,data1config)
   //set datacenter1 to use Round Robin policy for VM allocation
   datacenter1.setVmAllocationPolicy(new VmAllocationPolicyRoundRobin)
   //set datacenter1 costs
   datacenter1.getCharacteristics.setCostPerBw(data1config.getDouble("COSTPERBW")).setCostPerMem(data1config.getDouble("COSTPERMEM")).setCostPerSecond(data1config.getDouble("COSTPERSEC")).setCostPerStorage(data1config.getDouble("COSTBYSTORAGE"))
   //set power model for hosts
-  CreateObjects.setPowerModel(datacenter1.getHostList,data1config)
+  //CreateObjects.setPowerModel(datacenter1.getHostList,data1config)
   logger.info("Created datacenter1")
   CreateObjects.createMeshNetwork(cloudprovidersim, datacenter1)
   logger.info("Created Mesh network for datacenter1")
@@ -69,15 +69,15 @@ object CloudProvider {
   //creating a new broker to manage our VMs and Cloudlets
   val broker0 = new DatacenterBrokerSimple(cloudprovidersim)
   //connecting the two datacenter
-  CreateObjects.connectDatacenter(datacenterlist,broker0)
+  CreateObjects.connectDatacenter(datacenterlist,broker0, mainconfig)
   //setting the delay for destruction of VMs
-  broker0.setVmDestructionDelay(10.0)
-  cloudprovidersim.terminateAt(10000)
+  broker0.setVmDestructionDelay(mainconfig.getInt("VMDESTRUCTION"))
+  cloudprovidersim.terminateAt(mainconfig.getInt("SIM_TERMINATION"))
   //creating our VMS
   val vmList = CreateObjects.createNetworkVms(hostconfig.getInt("HOST_MIPS"), vmconfig.getInt("VMS"), vmconfig.getInt("VM_PES"), vmconfig.getInt("VM_RAM"), vmconfig.getInt("VM_BW"), vmconfig.getInt("VM_SIZE"))
   logger.info("VMs created")
   //creating our new cloudlets
-  val cloudletList = CreateObjects.createNetworkCloudlets(new UtilizationModelDynamic(0.5), cloudletconfig.getInt("CLOUDLETS"), cloudletconfig.getInt("CLOUDLET_LENGTH"), cloudletconfig.getInt("CLOUDLET_PES"), cloudletconfig.getInt("CLOUDLET_SIZE"))
+  val cloudletList = CreateObjects.createNetworkCloudlets(new UtilizationModelDynamic(cloudletconfig.getInt("DYNAMIC_UTIL")), cloudletconfig.getInt("CLOUDLETS"), cloudletconfig.getInt("CLOUDLET_LENGTH"), cloudletconfig.getInt("CLOUDLET_PES"), cloudletconfig.getInt("CLOUDLET_SIZE"))
   logger.info("Cloudlets created")
   //Distributes jobs among the VMs
   cloudletAlloc(cloudletconfig.getInt("CLOUDLETS") / vmconfig.getInt("VMS"),cloudletList,vmList)
@@ -217,31 +217,40 @@ private def cloudletAlloc(clpervm: Int, cloudletList: java.util.ArrayList[Networ
    addExecutionTask(cloudletList.get(0))
   }) //perform some fixed computation after receiving results from
  }
+//creates an execution task of a fixed length
  private def addExecutionTask(cloudlet: NetworkCloudlet): Unit ={
-  val task = new CloudletExecutionTask(cloudlet.getTasks.size(), 5000)
+  val config: Config = ConfigFactory.load("CloudProvider.conf")
+  val mainconfig = config.getConfig("CloudProviderConfig")
+  val task = new CloudletExecutionTask(cloudlet.getTasks.size(), mainconfig.getInt("TASK_EXECUTION_LENGTH"))
   task.setMemory(256)
   cloudlet.addTask(task)
  }
-
+//Creates an execution task of random length
  private def addRandomExecutionTask(cloudlet: NetworkCloudlet): Unit = {
+  val config: Config = ConfigFactory.load("CloudProvider.conf")
+  val mainconfig = config.getConfig("CloudProviderConfig")
   val task = new CloudletExecutionTask(cloudlet.getTasks.size(), ((Random.nextInt.abs%10)+1)*100)
-  task.setMemory(256)
+  task.setMemory(mainconfig.getInt("SEND_TASK_MEMORY"))
   cloudlet.addTask(task)
  }
-
+//cerates a send task
  private def addSendTask(source: NetworkCloudlet, destination: NetworkCloudlet): Unit ={
+  val config: Config = ConfigFactory.load("CloudProvider.conf")
+  val mainconfig = config.getConfig("CloudProviderConfig")
   val task = new CloudletSendTask(source.getTasks.size())
-  task.setMemory(256)//source.getMemory
+  task.setMemory(mainconfig.getInt("SEND_TASK_MEMORY"))//source.getMemory
   source.addTask(task)
-  (1 to 100).map{_=>
-    task.addPacket(destination, 1000)
+  (1 to mainconfig.getInt("EXPECTED_PACKETS")).map{_=>
+    task.addPacket(destination, mainconfig.getInt("PACKET_SIZE"))
   }
  }
-
+//creates a receive task
  private def addRecvTask(cloudlet: NetworkCloudlet, source: NetworkCloudlet): Unit ={
+  val config: Config = ConfigFactory.load("CloudProvider.conf")
+  val mainconfig = config.getConfig("CloudProviderConfig")
   val task = new CloudletReceiveTask(cloudlet.getTasks.size(),source.getVm)
-  task.setMemory(100)
-  task.setExpectedPacketsToReceive(100)
+  task.setMemory(mainconfig.getInt("RECV_TASK_MEMORY"))
+  task.setExpectedPacketsToReceive(mainconfig.getInt("EXPECTED_PACKETS"))
   cloudlet.addTask(task)
  }
 

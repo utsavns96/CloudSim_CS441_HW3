@@ -5,9 +5,12 @@ import org.cloudbus.cloudsim.brokers.DatacenterBrokerSimple
 import org.cloudbus.cloudsim.cloudlets.Cloudlet
 import org.cloudbus.cloudsim.core.CloudSim
 import org.cloudbus.cloudsim.datacenters.DatacenterSimple
+import org.cloudbus.cloudsim.power.models.PowerModelHost
 import org.cloudbus.cloudsim.schedulers.vm.{VmSchedulerSpaceShared, VmSchedulerTimeShared}
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelStochastic
+import org.cloudbus.cloudsim.vms.VmCost
 import org.cloudsimplus.builders.tables.{CloudletsTableBuilder, TextTableColumn}
+
 import scala.jdk.CollectionConverters.*
 
 object IaasPaasSaas {
@@ -122,6 +125,36 @@ object IaasPaasSaas {
       .addColumn(new TextTableColumn("CPU Utilization", "Percentage"), (cloudlet: Cloudlet) => BigDecimal(cloudlet.getUtilizationOfCpu() * 100.0).setScale(2, BigDecimal.RoundingMode.HALF_UP))
       .addColumn(new TextTableColumn("Datacenter"),(cloudlet: Cloudlet) => (cloudlet.getLastTriedDatacenter))
       .build()
+    var totalcost = 0.0
+    var processingtotalcost = 0.0
+    var memorycost = 0.0
+    var storagecost = 0.0
+    var bwtotalcost = 0.0
+    val createdvms1 = broker.getVmCreatedList.asScala
+    createdvms1.foreach(e => {
+      val cost = new VmCost(e)
+      processingtotalcost += cost.getProcessingCost
+      memorycost += cost.getMemoryCost
+      storagecost += cost.getStorageCost
+      bwtotalcost += cost.getBwCost
+      totalcost += cost.getTotalCost
+      println(cost)
+    })
+    println("Iaas Power details")
+    datacenteriaas.getHostList.asScala.foreach(host => {
+      val powerModel: PowerModelHost = host.getPowerModel
+      println("Host: " + host.getId + "\tTotal uptime:" + host.getTotalUpTime + " | Startup Time: " + powerModel.getTotalStartupTime + " | Startup Power: " + powerModel.getTotalStartupPower + " | Shutdown Time: " + powerModel.getTotalShutDownTime + " | Shutdown Power: " + powerModel.getTotalShutDownPower + "\n")
+    })
+    println("Paas Power details")
+    datacenterpaas.getHostList.asScala.foreach(host => {
+      val powerModel: PowerModelHost = host.getPowerModel
+      println("Host: " + host.getId + "\tTotal uptime:" + host.getTotalUpTime + " | Startup Time: " + powerModel.getTotalStartupTime + " | Startup Power: " + powerModel.getTotalStartupPower + " | Shutdown Time: " + powerModel.getTotalShutDownTime + " | Shutdown Power: " + powerModel.getTotalShutDownPower + "\n")
+    })
+    println("Saas Power details")
+    datacentersaas.getHostList.asScala.foreach(host => {
+      val powerModel: PowerModelHost = host.getPowerModel
+      println("Host: " + host.getId + "\tTotal uptime:" + host.getTotalUpTime + " | Startup Time: " + powerModel.getTotalStartupTime + " | Startup Power: " + powerModel.getTotalStartupPower + " | Shutdown Time: " + powerModel.getTotalShutDownTime + " | Shutdown Power: " + powerModel.getTotalShutDownPower + "\n")
+    })
     logger.info("Simulation finished")
   }
 }

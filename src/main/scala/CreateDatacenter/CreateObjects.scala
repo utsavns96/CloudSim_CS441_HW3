@@ -52,7 +52,7 @@ object CreateObjects {
       peList.add(new PeSimple(mips))
     }
     val host = HostSimple(ram, bw, storage, peList).setVmScheduler(vmscheduler.getClass().getDeclaredConstructor().newInstance())
-    val powerModel: PowerModelHost = new PowerModelHostSimple(50, 15)
+    val powerModel: PowerModelHost = new PowerModelHostSimple(config.getInt("MAXPOWER"), config.getInt("STATICPOWER"))
     powerModel.setStartupDelay(config.getInt("STARTUPDELAY"))
     powerModel.setShutDownDelay(config.getInt("SHUTDOWNDELAY"))
     powerModel.setStartupPower(config.getInt("STARTUPPOWER"))
@@ -62,7 +62,7 @@ object CreateObjects {
     host
   }
 
-  def setPowerModel(Hostlist: java.util.List[Host], config: Config): Unit ={
+/*  def setPowerModel(Hostlist: java.util.List[Host], config: Config): Unit ={
     Hostlist.asScala.foreach(host=>{
       val powerModel: PowerModelHost = new PowerModelHostSimple(config.getInt("MAXPOWER"), config.getInt("STATICPOWER"))
       powerModel.setStartupDelay(config.getInt("STARTUPDELAY"))
@@ -72,10 +72,10 @@ object CreateObjects {
       host.setIdleShutdownDeadline(config.getInt("IDLESHUTDOWNDEALINE"))
       host.setPowerModel(powerModel)
     })
-  }
+  }*/
   
   /**
-   * Creates a new VMs based on our configs
+   * Creates a list of new VMs based on our configs
    */
   def createVms(mips: Int, vms: Int, vm_pes: Int, vm_ram: Int, vm_bw: Int, vm_size: Int) = {
     val vmList = new util.ArrayList[Vm](vms)
@@ -88,7 +88,7 @@ object CreateObjects {
   }
 
   /**
-   * Creates a new Cloudlets based on our configs
+   * Creates a new List of Cloudlets of a random size based on our configs
    */
   def createCloudlets(utilizationModel: UtilizationModel, cloudlets: Int, cloudlet_length: Int, cloudlet_pes: Int, cloudlet_size: Int) = {
     val cloudletList = new util.ArrayList[Cloudlet](cloudlets)
@@ -100,49 +100,49 @@ object CreateObjects {
     }
     cloudletList
   }
-
+//creates a cloudlet of fixed size
   def createFixedCloudlets(utilizationModel: UtilizationModel, cloudlets: Int, cloudlet_length: Int, cloudlet_pes: Int, cloudlet_size: Int) = {
     val cloudletList = new util.ArrayList[Cloudlet](cloudlets)
     new Random()
     (1 to cloudlets).map { _ =>
       val cloudlet = new CloudletSimple(cloudlet_length, cloudlet_pes, utilizationModel)
-      cloudlet.setSizes(cloudlet_size)//.setSubmissionDelay((Random.nextInt().abs % 10) * 1000)
+      cloudlet.setSizes(cloudlet_size)
       cloudletList.add(cloudlet)
     }
     cloudletList
   }
   
-   def connectDatacenter(datacenterlist: List[Datacenter], broker: DatacenterBroker): Unit = {
+   def connectDatacenter(datacenterlist: List[Datacenter], broker: DatacenterBroker, config: Config): Unit = {
     val networkTopology = new BriteNetworkTopology()
-    networkTopology.addLink(datacenterlist(0), broker, 1000, 2)
-    networkTopology.addLink(datacenterlist(1), broker, 1000, 2)
-    networkTopology.addLink(datacenterlist(0), datacenterlist(1), 1000, 4)
+    networkTopology.addLink(datacenterlist(0), broker, config.getInt("DC0_BROKER_BW"),  config.getInt("DC0_BROKER_LATENCY"))
+    networkTopology.addLink(datacenterlist(1), broker,  config.getInt("DC1_BROKER_BW"),  config.getInt("DC1_BROKER_BW"))
+    networkTopology.addLink(datacenterlist(0), datacenterlist(1),  config.getInt("DC_TO_DC_BW"),  config.getInt("DC_TO_DC_LATENCY"))
   }
 
-   def createNetworkDatacenter(host: Int, pes: Int, mpis: Int, ram: Int, bw: Int, storage: Int, sim: CloudSim): NetworkDatacenter = {
+   def createNetworkDatacenter(host: Int, pes: Int, mpis: Int, ram: Int, bw: Int, storage: Int, sim: CloudSim, config: Config): NetworkDatacenter = {
     val hostList = new util.ArrayList[NetworkHost](host)
     (1 to host).map { _ =>
-      val host = createNetworkHost(new VmSchedulerTimeShared(), pes, mpis, ram, bw, storage)
+      val host = createNetworkHost(new VmSchedulerTimeShared(), pes, mpis, ram, bw, storage, config)
       hostList.add(host)
     }
     val datacenter = new NetworkDatacenter(sim, hostList, new VmAllocationPolicyRoundRobin)
     datacenter
   }
 
-   def createNetworkHost(vmscheduler: VmScheduler, pes: Int, mips: Int, ram: Int, bw: Int, storage: Int): NetworkHost = {
+   def createNetworkHost(vmscheduler: VmScheduler, pes: Int, mips: Int, ram: Int, bw: Int, storage: Int, config: Config): NetworkHost = {
     val peList = new util.ArrayList[Pe](pes)
     //Adding Processing Elements to our List
     (1 to pes).map { _ =>
       peList.add(new PeSimple(mips))
     }
     val host = new NetworkHost(ram, bw, storage, peList)
-    /*val powerModel: PowerModelHost = new PowerModelHostSimple(50, 15)
-    powerModel.setStartupDelay(0)
-    powerModel.setShutDownDelay(10)
-    powerModel.setStartupPower(40)
-    powerModel.setShutDownPower(15)
-    host.setPowerModel(powerModel)
-    host.setIdleShutdownDeadline(2.0)*/
+     val powerModel: PowerModelHost = new PowerModelHostSimple(config.getInt("MAXPOWER"), config.getInt("STATICPOWER"))
+     powerModel.setStartupDelay(config.getInt("STARTUPDELAY"))
+     powerModel.setShutDownDelay(config.getInt("SHUTDOWNDELAY"))
+     powerModel.setStartupPower(config.getInt("STARTUPPOWER"))
+     powerModel.setShutDownPower(config.getInt("SHUTDOWNPOWER"))
+     host.setIdleShutdownDeadline(config.getInt("IDLESHUTDOWNDEALINE"))
+     host.setPowerModel(powerModel)
     host
   }
 
@@ -160,11 +160,9 @@ object CreateObjects {
     val cloudletList = new util.ArrayList[NetworkCloudlet](cloudlets)
     (1 to cloudlets).map { i =>
       val cloudlet = new NetworkCloudlet(cloudlet_length, cloudlet_pes)
-      //val cloudlet = new CloudletSimple(cloudlet_length, cloudlet_pes)
-      //val cloudlet = new CloudletSimple((Random.nextInt().abs % 10 + 1) * 10000, cloudlet_pes)
-      cloudlet.setSizes(cloudlet_size) //.setSubmissionDelay((Random.nextInt().abs % 10) * 100)
+      cloudlet.setSizes(cloudlet_size)
       cloudlet.setUtilizationModelCpu(new UtilizationModelFull).setUtilizationModelRam(utilizationModel)
-        .setFileSize(1000).setOutputSize(100) //.setVm(vm).setBroker(broker0)
+        .setFileSize(cloudlet_length).setOutputSize(cloudlet_length/10)
       cloudletList.add(cloudlet)
       cloudlet.setId(cloudletid)
       logger.debug("Cloudlet created with ID = " + cloudlet.getId)
@@ -172,7 +170,7 @@ object CreateObjects {
     }
     cloudletList
   }
-
+  //helper function from cloudsim plus examples
    def getSwitchIndex(host: NetworkHost, ports: Int): Int = {
     Math.round(host.getId % Int.MaxValue) / ports
   }

@@ -23,6 +23,9 @@ import com.typesafe.config.{Config, ConfigFactory}
 
 import java.util
 
+/**
+ * This program compares different VmAllocation policies by running two simluations
+ */
 object VmAllocation {
   val logger = CreateLogger(classOf[VmAllocation.type])
   def runVmAllocation: Unit = {

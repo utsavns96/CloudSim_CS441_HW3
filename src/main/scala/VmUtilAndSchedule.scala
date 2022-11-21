@@ -23,7 +23,9 @@ import com.typesafe.config.{Config, ConfigFactory}
 import java.util
 import scala.language.postfixOps
 import scala.util.Random
-
+/**
+ * This program compares different VmUtilization policies by running two simluations
+ */
 object VmUtilAndSchedule {
   var datacenter0: DatacenterSimple =_
   var datacenter1: DatacenterSimple =_
@@ -138,7 +140,7 @@ object VmUtilAndSchedule {
     //setting our second datacenter to also use the First Fit policy for VM allocation.
     datacenter1.setVmAllocationPolicy(new VmAllocationPolicyFirstFit)
     logger.debug("Datacenter 1 is using FirstFit VM Allocation policy")
-    //datacenter1.getCharacteristics.setCostPerBw(0.02).setCostPerMem(0.008).setCostPerSecond(0.02).setCostPerStorage(0.0002)
+    //setting the costs
     datacenter1.getCharacteristics.setCostPerBw(dataconfig.getDouble("COSTPERBW")).setCostPerMem(dataconfig.getDouble("COSTPERMEM")).setCostPerSecond(dataconfig.getDouble("COSTPERSEC")).setCostPerStorage(dataconfig.getDouble("COSTBYSTORAGE"))
     logger.debug("Datacenter 1 costs set")
     //submitting our cloudlets
