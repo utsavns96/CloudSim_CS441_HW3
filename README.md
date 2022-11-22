@@ -71,3 +71,41 @@ To achieve this, the program creates 3 datacenters, where the configurations are
 For Paas, the provider defines everything in the Iaas model, plus the configurations of the VMs and the number of processing elements that each cloudlet gets. The user defines the details of how many VMs they want to spin up, and how many cloudlets of what length and size are required.<br>
 For Saas, the cloud provider defines most of the configurations, leaving the user to only control how many cloudlets they want to run, of what length and size, effectovely allowing them only to control the number of application instances that they can run.<br>
 Once the three datacenters are created, the Vms are spun up from all 3 configurations and submitted to the broker. The cloudlets are also generated from the 3 configurations and submitted to the broker. Then, the simulation is executed and the results of the simulation, cost and power are printed in the stdout.
+
+## Results:
+
+### 1) VMAllocation.scala
+![](VMalloc1.png)
+
+![](VMalloc2.png)
+
+### 2) VMUtilAndSchedule.scala
+![](VMUtil1.png)
+
+![](VMUtil2.png)
+
+### 3) CloudProvider.scala
+![](Cloudprovider%201.png)
+
+![](Cloudprovider%202.png)
+
+![](Cloudprovider%203.png)
+
+### 4) ScalingDatacenter.scala
+![](Scaling1.png)
+
+![](Scaling2.png)
+
+![](Scaling3.png)
+
+### 5) IaasPaasSaas.scala
+
+![](gradsim1.png)
+
+![](gradsim2.png)
+
+![](gradsim3.png)
+
+
+## Analysis:
+

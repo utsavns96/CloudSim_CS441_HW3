@@ -72,12 +72,12 @@ object CloudProvider {
   CreateObjects.connectDatacenter(datacenterlist,broker0, mainconfig)
   //setting the delay for destruction of VMs
   broker0.setVmDestructionDelay(mainconfig.getInt("VMDESTRUCTION"))
-  cloudprovidersim.terminateAt(mainconfig.getInt("SIM_TERMINATION"))
+  //cloudprovidersim.terminateAt(mainconfig.getInt("SIM_TERMINATION"))
   //creating our VMS
   val vmList = CreateObjects.createNetworkVms(hostconfig.getInt("HOST_MIPS"), vmconfig.getInt("VMS"), vmconfig.getInt("VM_PES"), vmconfig.getInt("VM_RAM"), vmconfig.getInt("VM_BW"), vmconfig.getInt("VM_SIZE"))
   logger.info("VMs created")
   //creating our new cloudlets
-  val cloudletList = CreateObjects.createNetworkCloudlets(new UtilizationModelDynamic(cloudletconfig.getInt("DYNAMIC_UTIL")), cloudletconfig.getInt("CLOUDLETS"), cloudletconfig.getInt("CLOUDLET_LENGTH"), cloudletconfig.getInt("CLOUDLET_PES"), cloudletconfig.getInt("CLOUDLET_SIZE"))
+  val cloudletList = CreateObjects.createNetworkCloudlets(new UtilizationModelDynamic(cloudletconfig.getDouble("DYNAMIC_UTIL")), cloudletconfig.getInt("CLOUDLETS"), cloudletconfig.getInt("CLOUDLET_LENGTH"), cloudletconfig.getInt("CLOUDLET_PES"), cloudletconfig.getInt("CLOUDLET_SIZE"))
   logger.info("Cloudlets created")
   //Distributes jobs among the VMs
   cloudletAlloc(cloudletconfig.getInt("CLOUDLETS") / vmconfig.getInt("VMS"),cloudletList,vmList)

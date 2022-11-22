@@ -65,6 +65,7 @@ object ScalingDatacenter {
     logger.debug("Cloudlets Created")
     //submit the vmlist
     broker.submitVmList(vmList)
+    broker.setVmDestructionDelay(vmconfig.getInt("VMDESTRUCTION"))
     logger.debug("VMList submitted")
     //submit the cloudlets
     broker.submitCloudletList(cloudletList)
@@ -108,9 +109,9 @@ object ScalingDatacenter {
     new CloudletsTableBuilder(finishedCloudlets, csv).addColumn(new TextTableColumn("RAM Utilization", "Percentage"), (cloudlet: Cloudlet) => BigDecimal(cloudlet.getUtilizationOfRam() * 100.0).setScale(2, BigDecimal.RoundingMode.HALF_UP))
       .addColumn(new TextTableColumn("CPU Utilization", "Percentage"), (cloudlet: Cloudlet) => BigDecimal(cloudlet.getUtilizationOfCpu() * 100.0).setScale(2, BigDecimal.RoundingMode.HALF_UP))
       .build()
-    logger.info("Simulation data is available in CloudproviderStats.csv")
-    logger.info("Cost data is available in CloudproviderCost.txt")
-    logger.info("Power usage data is available in CloudproviderPower.txt")
+    logger.info("Simulation data is available in ScalingDatacenterStats.csv")
+    logger.info("Cost data is available in ScalingDatacenterCost.txt")
+    logger.info("Power usage data is available in ScalingDatacenterPower.txt")
   }
 
   //Used to dynamically create VMs

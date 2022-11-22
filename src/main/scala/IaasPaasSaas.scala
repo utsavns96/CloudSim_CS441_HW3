@@ -63,6 +63,7 @@ object IaasPaasSaas {
       //default
       datacenteriaas = CreateObjects.createDatacenter(new VmSchedulerSpaceShared, iaashostconfig.getInt("HOSTS"), iaashostconfig.getInt("HOST_PES"), iaashostconfig.getInt("HOST_MIPS"), iaashostconfig.getInt("HOST_RAM"), iaashostconfig.getInt("HOST_BW"), iaashostconfig.getInt("HOST_STORAGE"), gradsim,iaasdataconfig)
     }
+    datacenteriaas.getCharacteristics.setCostPerBw(iaasdataconfig.getDouble("COSTPERBW")).setCostPerMem(iaasdataconfig.getDouble("COSTPERMEM")).setCostPerSecond(iaasdataconfig.getDouble("COSTPERSEC")).setCostPerStorage(iaasdataconfig.getDouble("COSTBYSTORAGE"))
     logger.debug("Iaas Datacenter Created")
     /**
      * creating the Paas Datacenter
@@ -77,6 +78,7 @@ object IaasPaasSaas {
       //default
       datacenterpaas = CreateObjects.createDatacenter(new VmSchedulerSpaceShared, paashostconfig.getInt("HOSTS"), paashostconfig.getInt("HOST_PES"), paashostconfig.getInt("HOST_MIPS"), paashostconfig.getInt("HOST_RAM"), paashostconfig.getInt("HOST_BW"), paashostconfig.getInt("HOST_STORAGE"), gradsim,paasdataconfig)
     }
+    datacenterpaas.getCharacteristics.setCostPerBw(paasdataconfig.getDouble("COSTPERBW")).setCostPerMem(paasdataconfig.getDouble("COSTPERMEM")).setCostPerSecond(paasdataconfig.getDouble("COSTPERSEC")).setCostPerStorage(paasdataconfig.getDouble("COSTBYSTORAGE"))
     logger.debug("Paas Datacenter Created")
     /**
      * creating the Saas Datacenter
@@ -91,6 +93,7 @@ object IaasPaasSaas {
       //default
       datacentersaas = CreateObjects.createDatacenter(new VmSchedulerSpaceShared, saashostconfig.getInt("HOSTS"), saashostconfig.getInt("HOST_PES"), saashostconfig.getInt("HOST_MIPS"), saashostconfig.getInt("HOST_RAM"), saashostconfig.getInt("HOST_BW"), saashostconfig.getInt("HOST_STORAGE"), gradsim,saasdataconfig)
     }
+    datacentersaas.getCharacteristics.setCostPerBw(saasdataconfig.getDouble("COSTPERBW")).setCostPerMem(saasdataconfig.getDouble("COSTPERMEM")).setCostPerSecond(saasdataconfig.getDouble("COSTPERSEC")).setCostPerStorage(saasdataconfig.getDouble("COSTBYSTORAGE"))
     logger.debug("Saas Datacenter Created")
     /**
      * creating the Vms for the Iaas Datacenter
@@ -106,6 +109,7 @@ object IaasPaasSaas {
     val vmListSaas = CreateObjects.createVms(saashostconfig.getInt("HOST_MIPS"),saasvmconfig.getInt("VMS"), saasvmconfig.getInt("VM_PES"), saasvmconfig.getInt("VM_RAM"), saasvmconfig.getInt("VM_BW"), saasvmconfig.getInt("VM_SIZE"))
     vmListIaas.addAll(vmListPaas)
     vmListIaas.addAll(vmListSaas)
+    broker.setVmDestructionDelay(iaasprovidervmconfig.getInt("VMDESTRUCTION"))
     broker.submitVmList(vmListIaas)
     /**
      * creating the Cloudlets for the Iaas Datacenter
