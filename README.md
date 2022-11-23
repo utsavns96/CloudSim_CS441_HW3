@@ -49,7 +49,8 @@ This program implements network topologies in multiple datacenters. To do this, 
 In createNetworkDatacenter, we create a list of hosts that we populate using createNetworkHost where the processing elements are created and passed to NetworkHost to create new hosts, after which a power model is added to the hosts.
 Once this is done, we configure the costs of the datacenter and specify it to use VmAllocationPolicyFirstFit.<br>
 Now, we create a Tree network topology for this datacenter using the configurations of the various switches from the CloudProvider.conf file. To create this topology, we generate our edge switches, aggregate switches and root switch and set their respective parameters. Then, the edge switches are connected to the hosts first, after which the aggregate switches are connected to the root switch.
-To connect our edge switches to our root switch, we first find how many edge switches we need to add to each aggregate switch, and how many such switches we need to use. Then, for every aggregate switch, we add the corresponding edge switches after checking if they have been previously connected or not. If not, they are connected to that aggregate switch.
+To connect our edge switches to our root switch, we first find how many edge switches we need to add to each aggregate switch, and how many such switches we need to use. Then, for every aggregate switch, we add the corresponding edge switches after checking if they have been previously connected or not. If not, they are connected to that aggregate switch.<br><br>
+![](images/tree.png)<br><br>
 The second datacenter is then created using similar steps as the first, where we create the hosts and datacenter, and then set the costs. However, this time we create a Mesh topology for this datacenter.
 The mesh network uses a lot more switches and connections than the tree network, but provides theoretically higher connectivity and redundancy. To create the mesh network, we generate the edge, aggregate and root switches as before, but generate an additional layer of aggregate switches than lie in between the first layer of aggregate switches and the root switch.
 To set up our connections, we start with connecting our all the hosts to all our edge switches, and all our aggregate switches to all our edge switches. Then, we connect the second layer of aggregate switches to the base layer by using a method similar to the one used in the tree topology to connect the edge switches to the aggregate switches. This helps us create redundant paths and increase the connectivity in the topology. After this, the second layer of aggregate switches are finally connected to the root switch. Additionally, we also connect each aggregate switch in the second layer to its neighbours, further increasing our number of paths.
@@ -57,8 +58,8 @@ To set up our connections, we start with connecting our all the hosts to all our
 After this, we create our Networkcloudlets using `CreateObjects.createNetworkCloudlets`, which gives us a list of NetworkCloudlets in return, after creating them and setting their parameters.<br>
 The cloudlets are then assigned to VMs, where the half the cloudlets are assigned to the first datacenter that uses a tree network using a first-fit policy, and the second half are assigned to the second datacenter which uses a mesh topology through a round-robin method.
 After our cloudlets have been assigned, the program gives map/reduce tasks to the first set of cloudlets in the tree topology datacenter, and gives a diffusion task to the cloudlets in the second, mesh topology datacenter. THe map/reduce tasks are divided evenly among the cloudlets in the tree datacenter, where half the cloudlets perform the mapper task, and the other half perform the reducer task.
-<br>The Vm list and Cloudlet list are submitted to the broker, and the simulation is then started.<br>The results are collected once the simualtion ends, and are placed in files for easy analysis. The power model information is stored in `CloudproviderPower.txt`, the cost information is stored in `CloudproviderCost.txt`, and the general simulation information is stored in `CloudproviderStats.csv`
-
+<br>The Vm list and Cloudlet list are submitted to the broker, and the simulation is then started.<br>The results are collected once the simualtion ends, and are placed in files for easy analysis. The power model information is stored in `CloudproviderPower.txt`, the cost information is stored in `CloudproviderCost.txt`, and the general simulation information is stored in `CloudproviderStats.csv`<br><br>
+![](images/mesh.png)<br><br>
 ### 5) ScalingDatacenter.scala
 This program creates tens of thousands of hosts, VMs and Cloudlets, and performs the simulation of scaling the VMs as more cloudlets arrive while the simulation runs.<br>
 To do this, we first load our configs and create the simulation. Then, the datacenter is created like the programs above and the scheduling interval is set from the config file. We create a new broker, and then add a listener for the simulation. This enables us to add cloudlets while the simulation runs, mimicking the arrival of new cloudlets. To add new cloudlets, we get the current time of the event that triggered the method, and we check if that time is divisible by the creation interval in the configs and is also less than the specified limit. If yes, we create a list of new cloudlets and assign them various parameters such as their length, a random submission delay, utilization model, etc. The newly created cloudlets are then submitted to the broker.
@@ -75,37 +76,51 @@ Once the three datacenters are created, the Vms are spun up from all 3 configura
 ## Results:
 
 ### 1) VMAllocation.scala
-![](VMalloc1.png)
+![](images/VMalloc1.png)
 
-![](VMalloc2.png)
+![](images/VMalloc2.png)
 
 ### 2) VMUtilAndSchedule.scala
-![](VMUtil1.png)
+![](images/VMUtil1.png)
 
-![](VMUtil2.png)
+![](images/VMUtil2.png)
 
 ### 3) CloudProvider.scala
-![](Cloudprovider%201.png)
+![](images/Cloudprovider%201.png)
 
-![](Cloudprovider%202.png)
+![](images/Cloudprovider%202.png)
 
-![](Cloudprovider%203.png)
+![](images/Cloudprovider%203.png)
 
 ### 4) ScalingDatacenter.scala
-![](Scaling1.png)
+![](images/Scaling1.png)
 
-![](Scaling2.png)
+![](images/Scaling2.png)
 
-![](Scaling3.png)
+![](images/Scaling3.png)
 
 ### 5) IaasPaasSaas.scala
 
-![](gradsim1.png)
+![](images/gradsim1.png)
 
-![](gradsim2.png)
+![](images/gradsim2.png)
 
-![](gradsim3.png)
+![](images/gradsim3.png)
 
 
 ## Analysis:
 
+### 1) VMAllocation.scala
+This simulation shows us the effects of different VM Allocation policies. The first simulation shows us how the first-fit policy works, where VM0 is allocated to Host 0, VM1 is allocated to Host 0, VM2 is allocated to Host 1, VM3 is allocated to Host 1, and so on.
+In first-fit, the VMs are allocated to the first host that fits our criteria of space, utilization, etc. We check the first host, and if it fits our criteria, we allocate the VM to it. If not, we move to the next host and check. This process goes on till we find a space for our VM and after it has been assigned, the process starts again for the next VM in our list.<br>
+The second simulation uses a round-robin allocation to allocate VMs to hosts, where VM0 is allocated to Host 0, VM1 is allocated to Host 1, VM2 is allocated to Host 2, VM3 is allocated to VM3, and so on.
+Round Robin moves through the Hosts and assigns the VMs one by one, which means that the first host gets the first VM, the second host gets the second VM, upto the last host getting its corresponding VM. Then, the algorithm loops back to assign the next VM to host 0.
+THe process continues till all the hosts are assigned.
+
+### 2) VMUtilAndSchedule.scala
+
+### 3) CloudProvider.scala
+
+### 4) ScalingDatacenter.scala
+
+### 5) IaasPaasSaas.scala
