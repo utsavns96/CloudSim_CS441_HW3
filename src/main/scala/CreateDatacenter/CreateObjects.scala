@@ -95,7 +95,7 @@ object CreateObjects {
     new Random()
     (1 to cloudlets).map { _ =>
       val cloudlet = new CloudletSimple((Random.nextInt().abs % 10 + 1) * 10000, cloudlet_pes, utilizationModel)
-      cloudlet.setSizes(cloudlet_size).setSubmissionDelay((Random.nextInt().abs % 10) * 1000)
+      cloudlet.setSizes(cloudlet_size)//.setSubmissionDelay((Random.nextInt().abs % 10) * 1000)
       cloudletList.add(cloudlet)
     }
     cloudletList

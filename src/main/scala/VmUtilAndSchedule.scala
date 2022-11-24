@@ -29,6 +29,8 @@ import scala.util.Random
 object VmUtilAndSchedule {
   var datacenter0: DatacenterSimple =_
   var datacenter1: DatacenterSimple =_
+  var cloudletList: util.ArrayList[Cloudlet] =_
+  var cloudletList1: util.ArrayList[Cloudlet] =_
   val logger = CreateLogger(classOf[VmUtilAndSchedule.type])
   def runVmScheduler: Unit = {
     logger.info("*****-----------------------------------------Starting VmUtilAndSchedule Simulation-----------------------------------------*****")
@@ -64,8 +66,17 @@ object VmUtilAndSchedule {
     logger.debug("VMList created")
     //copying our VMs to use later for the second simulation
     val vmList1 = vmList
+    
     //creating our new cloudlets
-    val cloudletList = CreateObjects.createFixedCloudlets(new UtilizationModelStochastic(), cloudletconfig.getInt("CLOUDLETS"), cloudletconfig.getInt("CLOUDLET_LENGTH"), cloudletconfig.getInt("CLOUDLET_PES"), cloudletconfig.getInt("CLOUDLET_SIZE"))
+    if(cloudletconfig.getString("CLOUD_UTIL_1").equals("stochastic")){
+      cloudletList = CreateObjects.createFixedCloudlets(new UtilizationModelStochastic(), cloudletconfig.getInt("CLOUDLETS"), cloudletconfig.getInt("CLOUDLET_LENGTH"), cloudletconfig.getInt("CLOUDLET_PES"), cloudletconfig.getInt("CLOUDLET_SIZE"))
+    }
+    else if (cloudletconfig.getString("CLOUD_UTIL_1").equals("full")){
+      cloudletList = CreateObjects.createFixedCloudlets(new UtilizationModelFull(), cloudletconfig.getInt("CLOUDLETS"), cloudletconfig.getInt("CLOUDLET_LENGTH"), cloudletconfig.getInt("CLOUDLET_PES"), cloudletconfig.getInt("CLOUDLET_SIZE"))
+    }
+    else{//default to stochastic
+      cloudletList = CreateObjects.createFixedCloudlets(new UtilizationModelStochastic(), cloudletconfig.getInt("CLOUDLETS"), cloudletconfig.getInt("CLOUDLET_LENGTH"), cloudletconfig.getInt("CLOUDLET_PES"), cloudletconfig.getInt("CLOUDLET_SIZE"))
+    }
     logger.debug("Cloudlets created")
     //submitting our VMs
     broker0.submitVmList(vmList)
@@ -132,7 +143,15 @@ object VmUtilAndSchedule {
     val broker1 = new DatacenterBrokerSimple(simulation1)
     logger.debug("Created broker 1")
     //creating our new cloudlets
-    val cloudletList1 = CreateObjects.createFixedCloudlets(new UtilizationModelFull, cloudletconfig.getInt("CLOUDLETS"), cloudletconfig.getInt("CLOUDLET_LENGTH"), cloudletconfig.getInt("CLOUDLET_PES"), cloudletconfig.getInt("CLOUDLET_SIZE"))
+    if (cloudletconfig.getString("CLOUD_UTIL_2").equals("stochastic")) {
+      cloudletList1 = CreateObjects.createFixedCloudlets(new UtilizationModelStochastic(), cloudletconfig.getInt("CLOUDLETS"), cloudletconfig.getInt("CLOUDLET_LENGTH"), cloudletconfig.getInt("CLOUDLET_PES"), cloudletconfig.getInt("CLOUDLET_SIZE"))
+    }
+    else if (cloudletconfig.getString("CLOUD_UTIL_2").equals("full")) {
+      cloudletList1 = CreateObjects.createFixedCloudlets(new UtilizationModelFull(), cloudletconfig.getInt("CLOUDLETS"), cloudletconfig.getInt("CLOUDLET_LENGTH"), cloudletconfig.getInt("CLOUDLET_PES"), cloudletconfig.getInt("CLOUDLET_SIZE"))
+    }
+    else { //default to full
+      cloudletList1 = CreateObjects.createFixedCloudlets(new UtilizationModelFull(), cloudletconfig.getInt("CLOUDLETS"), cloudletconfig.getInt("CLOUDLET_LENGTH"), cloudletconfig.getInt("CLOUDLET_PES"), cloudletconfig.getInt("CLOUDLET_SIZE"))
+    }
     logger.debug("Created list of cloudlets")
     //submitting our VMs to the second simulation
     broker1.submitVmList(vmList1)

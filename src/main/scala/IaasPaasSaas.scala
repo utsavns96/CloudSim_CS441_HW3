@@ -116,10 +116,10 @@ object IaasPaasSaas {
      */
     val iaascloudletList = CreateObjects.createCloudlets(new UtilizationModelStochastic, iaascloudletconfig.getInt("CLOUDLETS"), iaascloudletconfig.getInt("CLOUDLET_LENGTH"), iaascloudletconfig.getInt("CLOUDLET_PES"), iaascloudletconfig.getInt("CLOUDLET_SIZE"))
     val paascloudletList = CreateObjects.createCloudlets(new UtilizationModelStochastic, paascloudletconfig.getInt("CLOUDLETS"), paascloudletconfig.getInt("CLOUDLET_LENGTH"), paasprovidercloudletconfig.getInt("CLOUDLET_PES"), paascloudletconfig.getInt("CLOUDLET_SIZE"))
-    val saadcloudletList = CreateObjects.createCloudlets(new UtilizationModelStochastic, saascloudletconfig.getInt("CLOUDLETS"), saascloudletconfig.getInt("CLOUDLET_LENGTH"), saasprovidercloudletconfig.getInt("CLOUDLET_PES"), saascloudletconfig.getInt("CLOUDLET_SIZE"))
+    val saascloudletList = CreateObjects.createCloudlets(new UtilizationModelStochastic, saascloudletconfig.getInt("CLOUDLETS"), saascloudletconfig.getInt("CLOUDLET_LENGTH"), saasprovidercloudletconfig.getInt("CLOUDLET_PES"), saascloudletconfig.getInt("CLOUDLET_SIZE"))
 
     iaascloudletList.addAll(paascloudletList)
-    iaascloudletList.addAll(saadcloudletList)
+    iaascloudletList.addAll(saascloudletList)
     broker.submitCloudletList(iaascloudletList)
     gradsim.start()
     //gathering the results of our second simulation

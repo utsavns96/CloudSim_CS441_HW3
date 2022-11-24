@@ -42,6 +42,8 @@ For the second simulation, we take the same steps as above, but instead of First
 ### 3) VMUtilAndSchedule.scala
 This program runs two Cloudsim simulations that compares different VM Scheduler and Utilization policies. To do this, we first run a simulation just as described above. However, while creating our datacenters we specify the first datacenter to use VmSchedulerSpaceShared, and the second datacenter to use VmSchedulerTimeShared. (This is controlled through the config file and can be flipped around too.)<br>
 The cloudlets in the first simulation use UtilizationModelStochastic, while the second simulation use UtilizationModelFull.<br>
+In the third and fourth simulations, we keep the Cloudlet utilization as Full for both, and then change the first datacenter to use a SpaceShared VMScheduler.<br>
+This program is capable to testing any combination of VMScheduler TimeShared, SpaceShared and Utilization model Stochastic and Full.
 While creating the datacenters, we also specify the costs the datacenter has, which we then use at the end of the simulations to collect the cost of running our particular setup.
 
 ### 4) CloudProvider.scala
@@ -76,27 +78,34 @@ Once the three datacenters are created, the Vms are spun up from all 3 configura
 ## Results:
 
 ### 1) VMAllocation.scala
+Simulation 1:<br>
 ![](images/VMalloc1.png)
-
+<br>Simulation 2:<br>
 ![](images/VMalloc2.png)
-
+<br>
 ### 2) VMUtilAndSchedule.scala
-![](images/VMUtil1.png)
-
-![](images/VMUtil2.png)
-
+TimeShared and Stochastic Utilization:<br>
+![](images/VMUtil1.png)<br>
+TimeShared and Full utilization:<br>
+![](images/VMUtil2.png)<br>
+SpaceShared and Full utilization:<br>
+![](images/VMUtil3.png)<br>
+TimeShared and Full utilization:<br>
+![](images/VMUtil4.png)<br>
 ### 3) CloudProvider.scala
+Execution Stats:<br>
 ![](images/Cloudprovider%201.png)
-
+<br>Cost Data:<br>
 ![](images/Cloudprovider%202.png)
-
+<br>Power Data:<br>
 ![](images/Cloudprovider%203.png)
-
+<br>
 ### 4) ScalingDatacenter.scala
+Execution Data:<br>
 ![](images/Scaling1.png)
 
 ![](images/Scaling2.png)
-
+<br>Cost Data:<br>
 ![](images/Scaling3.png)
 
 ### 5) IaasPaasSaas.scala
@@ -118,9 +127,26 @@ Round Robin moves through the Hosts and assigns the VMs one by one, which means 
 THe process continues till all the hosts are assigned.
 
 ### 2) VMUtilAndSchedule.scala
+This simulation outlines the differences between the VM Scheduling policies of Space Shared and Time Shared. ALong with this, we can also see the effects of the cloudlet utilization models of Stochastic and Full.
+Using TimeShared for both, we can see the differences between utilization model stochastic and full - In stochastic, the VMs run for 27s and cost us $263.15. However, using UtilizationModelFull, we can see that half our cloudlets do not have enough resources to run, and ultimately are unable to execute, costing us millions of dollars.<br>
+The second experiment we run with this simulation is keeping both utilization models at full, and configuring the first simulation to use a Space Shared scheduler, while the second simulation uses a Time Shared scheduler.
+This time, we can see that neither of the simulations have all cloudlets complete successfully, and end up costing millions of dollars.
 
 ### 3) CloudProvider.scala
+The third program shows us how networks behave in the simulation. We create two datacenters, one using a tree network and one using a mesh network. The datacenter with the tree network is assigned a map/reduce task, and the datacenter with the mesh network is assigned a diffusion task.<br>
+This simulation not only introduces networks, but also shows us how tasks work with cloudlets, and how tasks can be added one after the other to cloudlets for sequential execution. We also see how data transfer can be simulated in the network using the send and receive tasks, and how a task will wait for receives to happen before execution of any further tasks. We also see how costs differ with execution time and task size.
+We can deduce that a mesh network, while introducing more links that serve to reduce congestion in the network, is more expensive, since it uses many more switches with far higher port counts, and similarly high number of connecting wires between elements, which drives up the cost of implementing this network as opposed to a simple tree-based network. 
 
 ### 4) ScalingDatacenter.scala
+This simulation shows us how a datacenter can react to an incoming dynamic workload by adding more VMs as needed. We start of with 10,000 hosts, with only 10,000 VMs hosted which run 20,000 cloudlets. During the course of execution we use a listener to add more cloudlets, simulating the arrival of workloads while the datacenter is running. The datacenter uses the predicate - is CPU utilization > 70% and is the RAM utilization > 50%. If this is satisfied, a new VM is spun up and added to our datacenter.<br>
+One important thing to note here is that there must be free hosts available to host this new datacenter, or else there will be no machines available to allocate the VM to which would make scaling useless.
 
 ### 5) IaasPaasSaas.scala
+This is the last simulation that is only for grad students - here we initialize 3 different datacenters which offer different models of the cloud services. The first datacenter offers us Iaas, the second offers us Paas and the third offers us Saas. These models are implemented using config files with varying degrees of user control between the models.
+An Iaas user has full control of the VMs and cloudlets that they spin up, while a Paas User can only define how many VMs they need and some of the cloudlet settings. A Saas user can only decide what size their workload is by controlling the bare minimum of cloudlet settings.<br>
+The rest of settings in these models are locked behind the Provider config files, which the Cloud Provider uses to provision the rest of the resources. This simulation shows us how we can offer three different models using three different datacenters, and let the broker decide how to distribute the workloads.
+
+## Limitations:
+1) The user of this simulation must have Java 17 installed on their machine.
+2) The networks are created using code instead of BRITE files (since I could not get them working in the time I had), which means that reconfiguring the networks requires code changes.
+3) Some of the larger simulations have a lot of data to process, which is put in the corresponding CSV and TXT files. The CSV files must be formatted using Text to Column in Excel before it can be used to infer the output of the simulation.
