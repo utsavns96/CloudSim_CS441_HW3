@@ -123,9 +123,9 @@ object IaasPaasSaas {
     broker.submitCloudletList(iaascloudletList)
     gradsim.start()
     //gathering the results of our second simulation
-    val finishedCloudlets1 = broker.getCloudletFinishedList.asScala
+    val finishedCloudlets1 = broker.getCloudletFinishedList
     //outputting the results as a table
-    new CloudletsTableBuilder(finishedCloudlets1.asJava).addColumn(new TextTableColumn("RAM Utilization", "Percentage"), (cloudlet: Cloudlet) => BigDecimal(cloudlet.getUtilizationOfRam() * 100.0).setScale(2, BigDecimal.RoundingMode.HALF_UP))
+    new CloudletsTableBuilder(finishedCloudlets1).addColumn(new TextTableColumn("RAM Utilization", "Percentage"), (cloudlet: Cloudlet) => BigDecimal(cloudlet.getUtilizationOfRam() * 100.0).setScale(2, BigDecimal.RoundingMode.HALF_UP))
       .addColumn(new TextTableColumn("CPU Utilization", "Percentage"), (cloudlet: Cloudlet) => BigDecimal(cloudlet.getUtilizationOfCpu() * 100.0).setScale(2, BigDecimal.RoundingMode.HALF_UP))
       .addColumn(new TextTableColumn("Datacenter"),(cloudlet: Cloudlet) => (cloudlet.getLastTriedDatacenter))
       .build()

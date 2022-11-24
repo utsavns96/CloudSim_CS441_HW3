@@ -15,7 +15,17 @@ object RunJobs {
       case 5 => IaasPaasSaas.runSim
       case _ => println("Invalid Input")
     }
- //IaasPaasSaas.runSim
+    //For Docker File
+/*    println("Simulation 1\n")
+    VmAllocation.runVmAllocation
+    println("Simulation 2\n")
+    VmUtilAndSchedule.runVmScheduler
+    println("Simulation 3\n")
+    CloudProvider.runCloud
+    println("Simulation 4\n")
+    ScalingDatacenter.runScaling
+    println("Simulation 5\n")
+    IaasPaasSaas.runSim*/
   }
 
 }

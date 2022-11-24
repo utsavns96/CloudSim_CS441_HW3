@@ -97,9 +97,9 @@ object VmAllocation {
     //starting the second simulation
     simulation1.start
     //gathering the results of our second simulation
-    val finishedCloudlets1 = broker1.getCloudletFinishedList.asScala
+    val finishedCloudlets1 = broker1.getCloudletFinishedList
     //outputting the results as a table
-    new CloudletsTableBuilder(finishedCloudlets1.asJava).addColumn(new TextTableColumn("RAM Utilization", "Percentage"), (cloudlet: Cloudlet) => BigDecimal(cloudlet.getUtilizationOfRam() * 100.0).setScale(2, BigDecimal.RoundingMode.HALF_UP))
+    new CloudletsTableBuilder(finishedCloudlets1).addColumn(new TextTableColumn("RAM Utilization", "Percentage"), (cloudlet: Cloudlet) => BigDecimal(cloudlet.getUtilizationOfRam() * 100.0).setScale(2, BigDecimal.RoundingMode.HALF_UP))
       .addColumn(new TextTableColumn("CPU Utilization", "Percentage"), (cloudlet: Cloudlet) => BigDecimal(cloudlet.getUtilizationOfCpu() * 100.0).setScale(2, BigDecimal.RoundingMode.HALF_UP))
       .build()
     logger.info("Simulation finished")

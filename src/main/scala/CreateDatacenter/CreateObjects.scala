@@ -321,10 +321,10 @@ object CreateObjects {
     val connected: java.util.List[AggregateSwitch] = new util.ArrayList[AggregateSwitch]
     (1 to pieces).map(i => {
       val subedge = aggregateSwitches.subList(i - 1, i * sections)
-      println("subedge")
+      logger.debug("subedge")
       (0 to (subedge.size() - 1)).map(j => {
         if (!connected.contains(subedge.get(j))) {
-          println(subedge.get(j).getId)
+          logger.debug(subedge.get(j).getId.toString)
           aggregateSwitchesL2.get(i - 1).getDownlinkSwitches.add(subedge.get(j))
           subedge.get(j).getUplinkSwitches.add(aggregateSwitchesL2.get(i - 1))
           connected.add(subedge.get(j))
@@ -350,7 +350,7 @@ object CreateObjects {
     aggregateSwitches.forEach({ e =>
       logger.debug("Aggregate L1 Switch: " + e.getId + " Downlink: ")
       e.getDownlinkSwitches.forEach({ f =>
-        println(f.getId)
+        logger.debug(f.getId.toString)
       })
       logger.debug(" Uplink:" + e.getUplinkSwitches)
     })

@@ -113,6 +113,7 @@ object ScalingDatacenter {
     logger.info("Cost data is available in ScalingDatacenterCost.txt")
     logger.info("Power usage data is available in ScalingDatacenterPower.txt")
   }
+  
 
   //Used to dynamically create VMs
    private def createVm: Vm ={

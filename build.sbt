@@ -21,3 +21,13 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.2.11" % Test,
   "org.cloudsimplus" % "cloudsim-plus" % "7.3.0"
 )
+
+assemblyMergeStrategy in assembly := {
+ case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+ case x => MergeStrategy.first
+}
+
+enablePlugins(
+  JavaAppPackaging,
+  DockerPlugin
+)

@@ -14,6 +14,14 @@ Repo for the Cloudsim Plus Homework-3 for CS411-Fall2022
 3) To run the project, run `sbt run` in the terminal and choose the simulation from the menu by entering the corresponding number and pressing `Enter`
 4) TO run the test suite, run `sbt test` in the terminal window.
 
+### Creating the Docker Image:
+1) Create a fat jar using `sbt assembly`
+2) Create the Dockerfile with no file extension and give the requisite parameters
+3) Use `docker build -t <name>` to build
+4) The image should be available in Docker Desktop now.
+5) Use `docker tag <name> <username>/<name>:latest` to tag the image
+6) use `docker push <username>/<name>:latest` to push the image to a dockerhub repo
+
 ---
 
 ## Technical Design
@@ -150,3 +158,4 @@ The rest of settings in these models are locked behind the Provider config files
 1) The user of this simulation must have Java 17 installed on their machine.
 2) The networks are created using code instead of BRITE files (since I could not get them working in the time I had), which means that reconfiguring the networks requires code changes.
 3) Some of the larger simulations have a lot of data to process, which is put in the corresponding CSV and TXT files. The CSV files must be formatted using Text to Column in Excel before it can be used to infer the output of the simulation.
+4) The program hangs in docker with the number of hosts/VMs/cloudlets set to tens of thousands, so this has been reduced to the thousands for just the docker image. It runs fine locally.
