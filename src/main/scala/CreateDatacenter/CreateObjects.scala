@@ -61,18 +61,6 @@ object CreateObjects {
     host.setPowerModel(powerModel)
     host
   }
-
-/*  def setPowerModel(Hostlist: java.util.List[Host], config: Config): Unit ={
-    Hostlist.asScala.foreach(host=>{
-      val powerModel: PowerModelHost = new PowerModelHostSimple(config.getInt("MAXPOWER"), config.getInt("STATICPOWER"))
-      powerModel.setStartupDelay(config.getInt("STARTUPDELAY"))
-      powerModel.setShutDownDelay(config.getInt("SHUTDOWNDELAY"))
-      powerModel.setStartupPower(config.getInt("STARTUPPOWER"))
-      powerModel.setShutDownPower(config.getInt("SHUTDOWNPOWER"))
-      host.setIdleShutdownDeadline(config.getInt("IDLESHUTDOWNDEALINE"))
-      host.setPowerModel(powerModel)
-    })
-  }*/
   
   /**
    * Creates a list of new VMs based on our configs
