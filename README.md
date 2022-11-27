@@ -7,6 +7,10 @@ Repo for the Cloudsim Plus Homework-3 for CS411-Fall2022
 
 ---
 
+Docker file: [Docker Hub](https://hub.docker.com/repository/docker/utsavns96/cloudsim)
+<br>To run the file, use `docker run utsavns96/cloudsim:latest` in a terminal on a machine that has docker installed.
+---
+
 ## Running the project
 
 1) Download the repo from git.
